@@ -1,4 +1,4 @@
-import { Restaurant, Product, RestaurantCategory, ProductCategory } from '../models/models.js'
+import { Restaurant, Product, RestaurantCategory, ProductCategory, sequelizeSession } from '../models/models.js'
 
 const index = async function (req, res) {
   try {
@@ -95,12 +95,39 @@ const destroy = async function (req, res) {
   }
 }
 
+const setStatus = async function (req, res) {
+  const t = await sequelizeSession.transaction()
+  try {
+    const restaurant = await Restaurant.findByPk(req.params.restaurantId)
+    if(restaurant.status === 'offline'){
+      await Restaurant.update(
+        {status: 'online'},
+        {where: {id: restaurant.id}},
+        {transaction: t}
+      )
+    } else if(restaurant.status === 'online'){
+      await Restaurant.update(
+        {status: 'offline'},
+        {where: {id: restaurant.id}},
+        {transaction: t}
+      )
+    }
+    await t.commit()
+    const updatedRestaurant = await Restaurant.findByPk(req.params.restaurantId)
+    res.json(updatedRestaurant)
+  } catch (error) {
+    await t.rollback()
+    res.status(500).send(err)
+  }
+}
+
 const RestaurantController = {
   index,
   indexOwner,
   create,
   show,
   update,
-  destroy
+  destroy,
+  setStatus
 }
 export default RestaurantController

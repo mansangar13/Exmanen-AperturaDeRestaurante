@@ -52,6 +52,7 @@ const loadModel = (sequelize, DataTypes) => {
     heroImage: DataTypes.STRING,
     status: {
       type: DataTypes.ENUM,
+      defaultValue: 'offline',
       values: [
         'online',
         'offline',
