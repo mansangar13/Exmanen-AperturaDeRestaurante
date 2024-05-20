@@ -2,7 +2,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { StyleSheet, FlatList, Pressable, View } from 'react-native'
 
-import { getAll, remove } from '../../api/RestaurantEndpoints'
+import { getAll, remove, putStatus } from '../../api/RestaurantEndpoints'
 import ImageCard from '../../components/ImageCard'
 import TextSemiBold from '../../components/TextSemibold'
 import TextRegular from '../../components/TextRegular'
@@ -26,6 +26,7 @@ export default function RestaurantsScreen ({ navigation, route }) {
     }
   }, [loggedInUser, route])
 
+  // aqui creamos dos botones, uno si el estado esta online y otro si el estado esta offline, son practicamente identicos
   const renderRestaurant = ({ item }) => {
     return (
       <ImageCard
@@ -40,6 +41,7 @@ export default function RestaurantsScreen ({ navigation, route }) {
           <TextSemiBold>Avg. service time: <TextSemiBold textStyle={{ color: GlobalStyles.brandPrimary }}>{item.averageServiceMinutes} min.</TextSemiBold></TextSemiBold>
         }
         <TextSemiBold>Shipping: <TextSemiBold textStyle={{ color: GlobalStyles.brandPrimary }}>{item.shippingCosts.toFixed(2)}€</TextSemiBold></TextSemiBold>
+        <TextSemiBold>Status: <TextSemiBold textStyle={{ color: GlobalStyles.brandPrimary }}>{item.status}</TextSemiBold></TextSemiBold>
         <View style={styles.actionButtonsContainer}>
           <Pressable
             onPress={() => navigation.navigate('EditRestaurantScreen', { id: item.id })
@@ -61,7 +63,7 @@ export default function RestaurantsScreen ({ navigation, route }) {
         </Pressable>
 
         <Pressable
-            onPress={() => { setRestaurantToBeDeleted(item) }}
+            onPress={() => { updateRestaurantStatus(item) }}
             style={({ pressed }) => [
               {
                 backgroundColor: pressed
@@ -77,6 +79,42 @@ export default function RestaurantsScreen ({ navigation, route }) {
             </TextRegular>
           </View>
         </Pressable>
+        {item.status === 'online' &&
+          <Pressable
+          onPress={() => { updateRestaurantStatus(item) }}
+          style={({ pressed }) => [
+            {
+              backgroundColor: pressed
+                ? GlobalStyles.brandGreenTap
+                : GlobalStyles.brandGreen
+            },
+            styles.actionButton
+          ]}>
+            <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
+            <MaterialCommunityIcons name='delete' color={'white'} size={20}/>
+            <TextRegular textStyle={styles.text}>
+              OFFLINE
+            </TextRegular>
+          </View>
+          </Pressable>}
+          {item.status === 'offline' &&
+          <Pressable
+          onPress={() => { updateRestaurantStatus(item) }}
+          style={({ pressed }) => [
+            {
+              backgroundColor: pressed
+                ? GlobalStyles.brandGreenTap
+                : GlobalStyles.brandGreen
+            },
+            styles.actionButton
+          ]}>
+            <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
+            <MaterialCommunityIcons name='delete' color={'white'} size={20}/>
+            <TextRegular textStyle={styles.text}>
+              ONLINE
+            </TextRegular>
+          </View>
+          </Pressable>}
         </View>
       </ImageCard>
     )
@@ -153,6 +191,29 @@ export default function RestaurantsScreen ({ navigation, route }) {
     }
   }
 
+  // hacemos un update de restaurant
+  const updateRestaurantStatus = async (restaurant) => {
+    try {
+      await putStatus(restaurant.id)
+      await fetchRestaurants()
+      showMessage({
+        message: `Restaurant ${restaurant.name} succesfully change satus`,
+        type: 'success',
+        style: GlobalStyles.flashStyle,
+        titleStyle: GlobalStyles.flashTextStyle
+      })
+    } catch (error) {
+      console.log(error)
+      setRestaurantToBeDeleted(null)
+      showMessage({
+        message: `Restaurant ${restaurant.name} could not change status.`,
+        type: 'error',
+        style: GlobalStyles.flashStyle,
+        titleStyle: GlobalStyles.flashTextStyle
+      })
+    }
+  }
+
   return (
     <>
     <FlatList
@@ -195,7 +256,7 @@ const styles = StyleSheet.create({
     padding: 10,
     alignSelf: 'center',
     flexDirection: 'column',
-    width: '50%'
+    width: '34%'
   },
   actionButtonsContainer: {
     flexDirection: 'row',

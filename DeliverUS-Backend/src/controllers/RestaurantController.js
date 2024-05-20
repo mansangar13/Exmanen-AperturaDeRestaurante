@@ -95,21 +95,24 @@ const destroy = async function (req, res) {
   }
 }
 
+// esta funcion controla el cambio del status del restaurante
+// busca el restaurante en cuestion, si el estado esta online devuelve, lo actualiza a offline y viceversa
+// luego hacemos el commit y despues devolvemos el restaurante ya actualizado
 const setStatus = async function (req, res) {
   const t = await sequelizeSession.transaction()
   try {
     const restaurant = await Restaurant.findByPk(req.params.restaurantId)
-    if(restaurant.status === 'offline'){
+    if (restaurant.status === 'offline') {
       await Restaurant.update(
-        {status: 'online'},
-        {where: {id: restaurant.id}},
-        {transaction: t}
+        { status: 'online' },
+        { where: { id: restaurant.id } },
+        { transaction: t }
       )
-    } else if(restaurant.status === 'online'){
+    } else if (restaurant.status === 'online') {
       await Restaurant.update(
-        {status: 'offline'},
-        {where: {id: restaurant.id}},
-        {transaction: t}
+        { status: 'offline' },
+        { where: { id: restaurant.id } },
+        { transaction: t }
       )
     }
     await t.commit()
@@ -117,7 +120,7 @@ const setStatus = async function (req, res) {
     res.json(updatedRestaurant)
   } catch (error) {
     await t.rollback()
-    res.status(500).send(err)
+    res.status(500).send(error)
   }
 }
 

@@ -50,6 +50,7 @@ const loadModel = (sequelize, DataTypes) => {
     phone: DataTypes.STRING,
     logo: DataTypes.STRING,
     heroImage: DataTypes.STRING,
+    // el status por defecto sera offline
     status: {
       type: DataTypes.ENUM,
       defaultValue: 'offline',
